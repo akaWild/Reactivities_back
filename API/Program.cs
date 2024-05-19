@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
@@ -14,7 +14,7 @@ builder.Services.AddDbContext<DataContext>(opt =>
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -26,5 +26,19 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+
+using IServiceScope scope = app.Services.CreateScope();
+IServiceProvider services = scope.ServiceProvider;
+
+try
+{
+    DataContext context = services.GetRequiredService<DataContext>();
+    context.Database.Migrate();
+}
+catch (Exception e)
+{
+    ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(e, "An error occured during migration");
+}
 
 app.Run();
