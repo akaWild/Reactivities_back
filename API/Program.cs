@@ -1,5 +1,7 @@
 using API.Extensions;
 using API.Middlewares;
+using Domain;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 
@@ -33,8 +35,10 @@ IServiceProvider services = scope.ServiceProvider;
 try
 {
     DataContext context = services.GetRequiredService<DataContext>();
+    UserManager<AppUser> userManager = services.GetRequiredService<UserManager<AppUser>>();
+
     await context.Database.MigrateAsync();
-    await Seed.SeedData(context);
+    await Seed.SeedData(context, userManager);
 }
 catch (Exception e)
 {
