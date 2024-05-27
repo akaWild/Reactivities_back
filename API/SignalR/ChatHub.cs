@@ -2,6 +2,7 @@
 using Application.Core;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Primitives;
 
 namespace API.SignalR
 {
@@ -22,15 +23,15 @@ namespace API.SignalR
 
         public override async Task OnConnectedAsync()
         {
-            base.OnConnectedAsync();
+            await base.OnConnectedAsync();
 
-            var httpContext = Context.GetHttpContext();
+            HttpContext? httpContext = Context.GetHttpContext();
 
-            var activityId = httpContext.Request.Query["activityId"];
+            StringValues activityId = httpContext.Request.Query["activityId"];
 
             await Groups.AddToGroupAsync(Context.ConnectionId, activityId);
 
-            var result = await _mediator.Send(new List.Query { ActivityId = Guid.Parse(activityId) });
+            Result<List<CommentDto>> result = await _mediator.Send(new List.Query { ActivityId = Guid.Parse(activityId) });
 
             await Clients.Caller.SendAsync("LoadComments", result.Value);
         }
